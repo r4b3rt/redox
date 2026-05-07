@@ -1,6 +1,7 @@
 [package]
 dependencies = [
     "autotools",
+    "cmake",
     "gcc13",
     "gcc13.cxx",
     "gnu-binutils",
