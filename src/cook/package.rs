@@ -251,38 +251,26 @@ pub fn package_handle_push(
     let archive_toml = archive_path.with_extension("toml");
     let pkey_path = "build/id_ed25519.pub.toml";
     let pkg_toml = Package::from_file(&archive_toml)?;
-    match state.installed.get(&pkg_toml.name) {
-        Some(s) if !reinstall && pkg_toml.blake3 == s.blake3 => Ok(true),
-        Some(s) => {
-            // "local" is what remote name from installer is hardcoded into
-            let remote_name = "local".to_string();
-
-            let install_state =
-                InstallState::from_package(&pkg_toml, remote_name, s.manual, s.dependents.clone());
-
-            // TODO: use pkgar::replace unless forced reinstall
-            pkgar::extract(pkey_path, &archive_path, sysroot_dir)?;
-
-            state.installed.insert(pkg_toml.name.clone(), install_state);
-
-            Ok(false)
-        }
+    // "local" is what remote name from installer is hardcoded into
+    let remote_name = "local".to_string();
+    let (cached, pstate) = match state.installed.get(&pkg_toml.name) {
+        Some(s) if !reinstall && pkg_toml.blake3 == s.blake3 => (true, None),
+        Some(s) => (false, Some((s.manual, s.dependents.clone()))),
         None => {
-            // "local" is what remote name from installer is hardcoded into
-            let remote_name = "local".to_string();
-
-            // TODO: Handle manual & depedents
-            let install_state =
-                InstallState::from_package(&pkg_toml, remote_name, true, BTreeSet::new());
-
-            pkgar::extract(pkey_path, &archive_path, sysroot_dir)?;
-
-            // TODO: Inject dependencies
-            // TODO: Check if we need to inject remote key
-
-            state.installed.insert(pkg_toml.name.clone(), install_state);
-
-            Ok(false)
+            // TODO: Handle manual & dependents
+            (false, Some((true, BTreeSet::new())))
         }
+    };
+
+    if let Some((manual, dependents)) = pstate {
+        if archive_path.is_file() {
+            pkgar::extract(pkey_path, &archive_path, sysroot_dir)?;
+        }
+
+        // TODO: Check if we need to inject remote key
+        let install_state = InstallState::from_package(&pkg_toml, remote_name, manual, dependents);
+        state.installed.insert(pkg_toml.name.clone(), install_state);
     }
+
+    Ok(cached)
 }

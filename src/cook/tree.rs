@@ -62,10 +62,14 @@ pub fn walk_tree_entry(
     let (_, pkg_path, pkg_toml) = cook_recipe.stage_paths();
 
     let deduped = visited.contains(package_name);
-    let entry = match (std::fs::metadata(&pkg_path), deduped) {
-        (_, true) => WalkTreeEntry::Deduped,
-        (Ok(meta), _) => WalkTreeEntry::Built(&pkg_path, meta.len()),
-        (Err(_), _) => WalkTreeEntry::NotBuilt,
+    let entry = if deduped {
+        WalkTreeEntry::Deduped
+    } else {
+        match (std::fs::metadata(&pkg_path), pkg_toml.is_file()) {
+            (Ok(meta), _) => WalkTreeEntry::Built(&pkg_path, meta.len()),
+            (Err(_), true) => WalkTreeEntry::Built(&pkg_path, 0),
+            (Err(_), false) => WalkTreeEntry::NotBuilt,
+        }
     };
 
     let cached = op(package_name, prefix, is_last, &entry)?;
