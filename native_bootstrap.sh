@@ -1171,7 +1171,7 @@ else
     fi
 fi
 
-cargoInstall just 1.42.4
+cargoInstall just 1.50.0
 cargoInstall cbindgen 0.29.0
 
 if [ "$dependenciesonly" = false ]; then
