@@ -8,6 +8,18 @@ template = "custom"
 script = """
 mkdir -pv "${COOKBOOK_STAGE}/home/user/acid"
 cp -rv "${COOKBOOK_SOURCE}"/* "${COOKBOOK_STAGE}/home/user/acid"
+
+# Create runner script
+mkdir -p "${COOKBOOK_STAGE}/usr/bin"
+cat > "${COOKBOOK_STAGE}/usr/bin/acid-runner" <<EOF
+#!/usr/bin/env bash
+set -e
+cd /home/user/acid
+cargo test
+EOF
+
+chmod +x "${COOKBOOK_STAGE}/usr/bin/acid-runner"
+
 """
 [package]
 dependencies = ["rust"]

@@ -11,9 +11,9 @@ template = "custom"
 script = """
 DYNAMIC_INIT
 
-# Copy source to /usr/share/os-test
-mkdir -p "${COOKBOOK_STAGE}/usr/share/os-test"
-cd "${COOKBOOK_STAGE}/usr/share/os-test"
+# Copy source to /home/user/os-test
+mkdir -p "${COOKBOOK_STAGE}/home/user/os-test"
+cd "${COOKBOOK_STAGE}/home/user/os-test"
 rsync -a "${COOKBOOK_SOURCE}/" "./"
 
 # Pre-compile tests for Redox
@@ -56,7 +56,7 @@ mkdir -p "${COOKBOOK_STAGE}/usr/bin"
 cat > "${COOKBOOK_STAGE}/usr/bin/os-test-runner" <<EOF
 #!/usr/bin/env bash
 set -e
-cd /usr/share/os-test
+cd /home/user/os-test
 
 echo "Ensuring executables are newer than sources"
 find . -type f -perm /111 -exec touch '{}' ';'
